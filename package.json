@@ -1,0 +1,25 @@
+{
+  "name": "discordbot",
+  "version": "1.0.0",
+  "description": "Testing out multiple functions for personal use",
+  "main": "index.js",
+  "type": "module",
+  "directories": {
+    "lib": "src"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "test"
+  },
+  "author": "Alex Dale",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.18.0",
+    "dotenv": "^16.4.7",
+    "node": "^23.9.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "eslint": "^9.21.0"
+  }
+}
