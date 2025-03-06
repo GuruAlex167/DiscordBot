@@ -1,72 +1,43 @@
-//@ts-check
 import 'dotenv/config';
-import { REST, Routes } from 'discord.js';
-import { fileURLToPath, pathToFileURL } from 'url';
+import { REST, Routes, SlashCommandBuilder } from 'discord.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { getDirname } from '../utils.js';
 
-const commands = [];
-
-const __filename = fileURLToPath(import.meta.url);
 const __dirname = getDirname(import.meta.url);
 
-// Grab all the command folders from the commands directory you created earlier
-const foldersPath = path.join(__dirname, '../', 'commands');
-const commandFolders = fs.readdirSync(foldersPath);
-
-for (const folder of commandFolders) {
-    // Grab all the command files from the commands directory you created earlier
-    const commandsPath = path.join(foldersPath, folder);
-    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-    // Grab the SlashCommandBuilder#toJSON() output of each command's data for deployment
-    for (const file of commandFiles) {
-        const filePath = path.join(commandsPath, file);
-        const fileUrl = pathToFileURL(filePath).href;
-        const command = await import(fileUrl);
-        if ('data' in command && 'execute' in command) {
-            commands.push(command.data.toJSON());
-        } else {
-            console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
-        }
-    }
-}
-
-// Construct and prepare an instance of the REST module
+// Checks to make sure the required environment variables are set
 if (!process.env.DISCORD_TOKEN) {
     throw new Error('Missing DISCORD_TOKEN in environment variables.');
 }
+if (!process.env.clientId || !process.env.guildId || !process.env.guildId2) {
+    throw new Error('Missing clientId or guildId(s) in environment variables.');
+}
+const guilds = [process.env.guildId, process.env.guildId2];
+
 const rest = new REST().setToken(process.env.DISCORD_TOKEN);
 
-// and deploy your commands!
+const commands = [];
+const listPath = path.join(__dirname, '../', 'listofcs.json');
+const listOfCommands = JSON.parse(fs.readFileSync(listPath, 'utf-8'));
+
+for (const [name, description] of Object.entries(listOfCommands)) {
+    commands.push(new SlashCommandBuilder().setName(name).setDescription(description).toJSON());
+}
+
+// Deploy the commands to the guild
 (async () => {
     try {
         console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
-        // The put method is used to fully refresh all commands in the guild with the current set
-        if (!process.env.clientId || !process.env.guildId) {
-            throw new Error('Missing clientId or guildId in environment variables.');
+        for (const guildId of guilds) {
+            const data = await rest.put(
+                Routes.applicationGuildCommands(process.env.clientId, guildId),
+                { body: commands },
+            );
+            console.log(`Successfully reloaded ${data.length} application (/) commands.`);
         }
-
-        const data = /** @type {Array<Object>} */ (await rest.put(
-            Routes.applicationGuildCommands(process.env.clientId, process.env.guildId),
-            { body: commands },
-        ));
-        //second set
-        if (!process.env.clientId || !process.env.guildId2) {
-            throw new Error('Missing clientId or guildId2 in environment variables.');
-        }
-        const data2 = /** @type {Array<Object>} */ (await rest.put(
-            Routes.applicationGuildCommands(process.env.clientId, process.env.guildId2),
-            { body: commands },
-        ));
-
-
-        console.log(`Successfully reloaded ${data.length} application (/) commands.`);
-
-        console.log(`Successfully reloaded ${data2.length} application (/) commands.`);
     } catch (error) {
-        // And of course, make sure you catch and log any errors!
         console.error(error);
     }
 })();

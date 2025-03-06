@@ -1,17 +1,17 @@
-import { determineWinner } from "./utilities/gameLogic.js";
-import { SlashCommandBuilder } from "discord.js";
+import { determineWinner } from './utilities/gameLogic.js';
+import { SlashCommandBuilder } from 'discord.js';
 
 export const data = new SlashCommandBuilder()
-    .setName("rps")
-    .setDescription("Play Rock Paper Scissors! How fun!");
+    .setName('rps')
+    .setDescription('Play Rock Paper Scissors! How fun!');
 
 export async function execute(message, args, scores) {
-    const validMoves = ["rock", "paper", "scissors"];
+    const validMoves = ['rock', 'paper', 'scissors'];
     const playerMove = args[0]?.toLowerCase();
 
     if (!playerMove || !validMoves.includes(playerMove)) {
         return message.reply(
-            "Please provide a valid move: rock, paper, or scissors",
+            'Please provide a valid move: rock, paper, or scissors',
         );
     }
 
@@ -28,23 +28,23 @@ export async function execute(message, args, scores) {
     }
 
     const userScore = scores.get(userId);
-    if (result === "win") userScore.wins++;
-    else if (result === "lose") userScore.losses++;
+    if (result === 'win') userScore.wins++;
+    else if (result === 'lose') userScore.losses++;
     else userScore.ties++;
 
     // Create response message
     const response = [
         `You chose: ${playerMove}`,
         `I chose: ${botMove}`,
-        "",
-        result === "win"
-            ? "You win! 🎉"
-            : result === "lose"
-                ? "I win! 😎"
-                : "It's a tie! 🤝",
-        "",
+        '',
+        result === 'win'
+            ? 'You win! 🎉'
+            : result === 'lose'
+                ? 'I win! 😎'
+                : 'It\'s a tie! 🤝',
+        '',
         `Your score: Wins: ${userScore.wins} | Losses: ${userScore.losses} | Ties: ${userScore.ties}`,
-    ].join("\n");
+    ].join('\n');
 
     message.reply(response);
 }
