@@ -3,7 +3,8 @@ import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
 import { getDirname } from './utils.js';
-import { Client, Collection, Events, GatewayIntentBits } from "discord.js";
+import pkg from 'discord.js';
+const { Client, Collection, Intents } = pkg;
 
 class ExtendedClient extends Client {
     constructor(options) {
@@ -13,7 +14,7 @@ class ExtendedClient extends Client {
 }
 
 const client = new ExtendedClient({
-    intents: [GatewayIntentBits.Guilds],
+    intents: [Intents.FLAGS.GUILDS],
 });
 
 const __dirname = getDirname(import.meta.url);
@@ -29,14 +30,14 @@ const foldersPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
 console.log("commandFolders: ", commandFolders);
 
-client.once(Events.ClientReady, readyClient => {
+client.once('ready', readyClient => {
     console.log(`Logged in as ${readyClient.user.tag}`);
 });
 
-client.on(Events.InteractionCreate, async interaction => {
+client.on('interactionCreate', async interaction => {
     console.log("input recieved");
 
-    if (!interaction.isChatInputCommand()) return;
+    if (!interaction.isCommand()) return;
 
     console.log(interaction);
     const commandName = interaction.commandName;
